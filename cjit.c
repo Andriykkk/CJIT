@@ -5,41 +5,49 @@
 #include <stdbool.h>
 #include "lexer/lexer.h"
 
+char *read_file(const char *filename, int *file_size)
+{
+    FILE *file = fopen(filename, "rb");
+
+    if (file == NULL)
+    {
+        printf("Error opening file: %s\n", filename);
+        return NULL;
+    }
+
+    fseek(file, 0, SEEK_END);
+    *file_size = ftell(file);
+    rewind(file);
+
+    char *source = (char *)malloc(*file_size + 1);
+    if (source == NULL)
+    {
+        printf("Error allocating memory\n");
+        fclose(file);
+        return NULL;
+    }
+
+    fread(source, *file_size, 1, file);
+    source[*file_size] = '\0';
+
+    fclose(file);
+    return source;
+}
+
 int main(int argc, char *argv[])
 {
-    FILE *file;
-    char *source;
-    int file_size;
-
     if (argc < 2)
     {
         printf("Usage: %s <file>\n", argv[0]);
         return 1;
     }
 
-    file = fopen(argv[1], "rb");
-    if (file == NULL)
-    {
-        printf("Error opening file: %s\n", argv[1]);
-        return 1;
-    }
-
-    fseek(file, 0, SEEK_END);
-    file_size = ftell(file);
-    rewind(file);
-
-    source = (char *)malloc(file_size + 1);
+    int file_size;
+    char *source = read_file(argv[1], &file_size);
     if (source == NULL)
     {
-        printf("Error allocating memory\n");
-        fclose(file);
-        return 1;
+        printf("Failed to read file: %s\n", argv[1]);
     }
-
-    fread(source, file_size, 1, file);
-    source[file_size] = '\0';
-
-    fclose(file);
 
     Lexer *lexer = init_lexer(source);
     Token *token;

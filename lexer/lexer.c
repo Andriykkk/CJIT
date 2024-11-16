@@ -1,9 +1,9 @@
 #include "lexer.h"
 #include <stdlib.h>
 #include <string.h>
-
-
-
+#include <ctype.h>
+#include <stdbool.h>
+#include <stdio.h>
 
 Lexer *init_lexer(char *source)
 {
