@@ -19,6 +19,8 @@ typedef enum
     // Operators
     TOKEN_PLUS,
     TOKEN_MINUS,
+    TOKEN_INCREMENT,
+    TOKEN_DECREMENT,
     TOKEN_MULTIPLY,
     TOKEN_POWER,
     TOKEN_DIVIDE,
@@ -82,3 +84,5 @@ typedef struct
 Lexer *init_lexer(char *source);
 
 Token *get_next_token(Lexer *lexer);
+
+char *token_type_to_string(TokenType type);

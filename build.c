@@ -1,15 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/stat.h>
-#include <string.h>
-#include <unistd.h>
 #include <errno.h>
+#include <string.h>
 
 int main(int argc, char *argv[])
 {
-
-    const char *command = "gcc cjit.c lexer/lexer.c -o cjit; ./cjit example1.cj";
+    const char *command = "gcc -g -o cjit cjit.c lexer/lexer.c; ./cjit example1.cj";
     int result = system(command);
+
+    if (result == -1)
+    {
+        fprintf(stderr, "Error executing command: %s\n", strerror(errno));
+        return 1;
+    }
 
     return 0;
 }
