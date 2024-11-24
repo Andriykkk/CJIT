@@ -1,0 +1,311 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Token types
+typedef enum {
+    TOKEN_INCLUDE,
+    TOKEN_INT,
+    TOKEN_MAIN,
+    TOKEN_IDENTIFIER,
+    TOKEN_NUMBER,
+    TOKEN_PLUS,
+    TOKEN_MULTIPLY,
+    TOKEN_ASSIGN,
+    TOKEN_SEMICOLON,
+    TOKEN_LPAREN,
+    TOKEN_RPAREN,
+    TOKEN_LBRACE,
+    TOKEN_RBRACE,
+    TOKEN_STRING,
+    TOKEN_RETURN,
+    TOKEN_PRINTF,
+    TOKEN_COMMA,
+    TOKEN_EOF
+} TokenType;
+
+// Token structure
+typedef struct {
+    TokenType type;
+    char* value;
+} Token;
+
+// AST node types
+typedef enum {
+    NODE_PROGRAM,
+    NODE_FUNCTION,
+    NODE_ASSIGNMENT,
+    NODE_BINARY_OP,
+    NODE_NUMBER,
+    NODE_IDENTIFIER,
+    NODE_PRINTF,
+    NODE_STRING,
+    NODE_RETURN
+} NodeType;
+
+// AST node structure
+typedef struct ASTNode {
+    NodeType type;
+    char* value;
+    struct ASTNode* left;
+    struct ASTNode* right;
+    // For function calls and other multi-argument nodes
+    struct ASTNode** children;
+    int num_children;
+} ASTNode;
+
+// Parser structure
+typedef struct {
+    Token* tokens;
+    int current_token;
+    int total_tokens;
+} Parser;
+
+// Mock tokens for the example code
+Token tokens[] = {
+    {TOKEN_INCLUDE, "#include <stdio.h>"},
+    {TOKEN_INT, "int"},
+    {TOKEN_MAIN, "main"},
+    {TOKEN_LPAREN, "("},
+    {TOKEN_RPAREN, ")"},
+    {TOKEN_LBRACE, "{"},
+    {TOKEN_IDENTIFIER, "b"},
+    {TOKEN_ASSIGN, "="},
+    {TOKEN_NUMBER, "3"},
+    {TOKEN_IDENTIFIER, "x"},
+    {TOKEN_ASSIGN, "="},
+    {TOKEN_NUMBER, "5"},
+    {TOKEN_PLUS, "+"},
+    {TOKEN_LPAREN, "("},
+    {TOKEN_NUMBER, "2"},
+    {TOKEN_MULTIPLY, "*"},
+    {TOKEN_NUMBER, "5"},
+    {TOKEN_RPAREN, ")"},
+    {TOKEN_SEMICOLON, ";"},
+    {TOKEN_PRINTF, "printf"},
+    {TOKEN_LPAREN, "("},
+    {TOKEN_STRING, "\"Hello World %d\""},
+    {TOKEN_COMMA, ","},
+    {TOKEN_IDENTIFIER, "x"},
+    {TOKEN_RPAREN, ")"},
+    {TOKEN_SEMICOLON, ";"},
+    {TOKEN_RETURN, "return"},
+    {TOKEN_NUMBER, "0"},
+    {TOKEN_SEMICOLON, ";"},
+    {TOKEN_RBRACE, "}"},
+    {TOKEN_EOF, ""}
+};
+
+// Function to create a new AST node
+ASTNode* create_node(NodeType type, char* value) {
+    ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    node->type = type;
+    node->value = value ? strdup(value) : NULL;
+    node->left = NULL;
+    node->right = NULL;
+    node->children = NULL;
+    node->num_children = 0;
+    return node;
+}
+
+// Function to print the AST (for visualization)
+void print_ast(ASTNode* node, int depth) {
+    if (node == NULL) return;
+
+    for (int i = 0; i < depth; i++) printf("  ");
+
+    switch (node->type) {
+        case NODE_PROGRAM:
+            printf("Program\n");
+            break;
+        case NODE_FUNCTION:
+            printf("Function: %s\n", node->value);
+            break;
+        case NODE_ASSIGNMENT:
+            printf("Assignment: %s\n", node->value);
+            break;
+        case NODE_BINARY_OP:
+            printf("Binary Operation: %s\n", node->value);
+            break;
+        case NODE_NUMBER:
+            printf("Number: %s\n", node->value);
+            break;
+        case NODE_IDENTIFIER:
+            printf("Identifier: %s\n", node->value);
+            break;
+        case NODE_PRINTF:
+            printf("Printf\n");
+        case NODE_STRING:
+            printf("String\n");
+            break;
+        case NODE_RETURN:
+            printf("Return\n");
+            break;
+    }
+
+    if (node->left) print_ast(node->left, depth + 1);
+    if (node->right) print_ast(node->right, depth + 1);
+    
+    for (int i = 0; i < node->num_children; i++) {
+        print_ast(node->children[i], depth + 1);
+    }
+}
+
+// Parser functions
+Token current_token(Parser* parser) {
+    return parser->tokens[parser->current_token];
+}
+
+void advance_token(Parser* parser) {
+    if (parser->current_token < parser->total_tokens) {
+        parser->current_token++;
+    }
+}
+
+// Main parsing functions
+ASTNode* parse_expression(Parser* parser);
+ASTNode* parse_statement(Parser* parser);
+
+ASTNode* parse_factor(Parser* parser) {
+    Token token = current_token(parser);
+    
+    if (token.type == TOKEN_NUMBER) {
+        advance_token(parser);
+        return create_node(NODE_NUMBER, token.value);
+    } else if (token.type == TOKEN_IDENTIFIER) {
+        advance_token(parser);
+        return create_node(NODE_IDENTIFIER, token.value);
+    } else if (token.type == TOKEN_LPAREN) {
+        advance_token(parser);
+        ASTNode* node = parse_expression(parser);
+        advance_token(parser); // Consume RPAREN
+        return node;
+    }
+    
+    return NULL;
+}
+
+ASTNode* parse_term(Parser* parser) {
+    ASTNode* left = parse_factor(parser);
+    
+    while (current_token(parser).type == TOKEN_MULTIPLY) {
+        Token op = current_token(parser);
+        advance_token(parser);
+        ASTNode* right = parse_factor(parser);
+        
+        ASTNode* new_node = create_node(NODE_BINARY_OP, "*");
+        new_node->left = left;
+        new_node->right = right;
+        left = new_node;
+    }
+    
+    return left;
+}
+
+ASTNode* parse_expression(Parser* parser) {
+    ASTNode* left = parse_term(parser);
+    
+    while (current_token(parser).type == TOKEN_PLUS) {
+        Token op = current_token(parser);
+        advance_token(parser);
+        ASTNode* right = parse_term(parser);
+        
+        ASTNode* new_node = create_node(NODE_BINARY_OP, "+");
+        new_node->left = left;
+        new_node->right = right;
+        left = new_node;
+    }
+    
+    return left;
+}
+
+ASTNode* parse_assignment(Parser* parser) {
+    Token identifier = current_token(parser);
+    advance_token(parser); // Consume identifier
+    advance_token(parser); // Consume =
+    
+    ASTNode* node = create_node(NODE_ASSIGNMENT, identifier.value);
+    node->right = parse_expression(parser);
+    return node;
+}
+
+ASTNode* parse_printf(Parser* parser) {
+    ASTNode* node = create_node(NODE_PRINTF, NULL);
+    advance_token(parser); // Consume printf
+    advance_token(parser); // Consume (
+    
+    node->children = (ASTNode**)malloc(2 * sizeof(ASTNode*));
+    node->num_children = 2;
+    
+    // Parse string literal
+    node->children[0] = create_node(NODE_STRING, current_token(parser).value);
+    advance_token(parser); // Consume string
+    advance_token(parser); // Consume comma
+    
+    // Parse expression
+    node->children[1] = create_node(NODE_IDENTIFIER, current_token(parser).value);
+    advance_token(parser); // Consume identifier
+    advance_token(parser); // Consume )
+    
+    return node;
+}
+
+ASTNode* parse_return(Parser* parser) {
+    advance_token(parser); // Consume return
+    ASTNode* node = create_node(NODE_RETURN, NULL);
+    node->left = parse_expression(parser);
+    return node;
+}
+
+ASTNode* parse_statement(Parser* parser) {
+    Token token = current_token(parser);
+    
+    if (token.type == TOKEN_IDENTIFIER) {
+        return parse_assignment(parser);
+    } else if (token.type == TOKEN_PRINTF) {
+        return parse_printf(parser);
+    } else if (token.type == TOKEN_RETURN) {
+        return parse_return(parser);
+    }
+    
+    return NULL;
+}
+
+ASTNode* parse_function(Parser* parser) {
+    advance_token(parser); // Consume int
+    Token func_name = current_token(parser);
+    advance_token(parser); // Consume main
+    advance_token(parser); // Consume (
+    advance_token(parser); // Consume )
+    advance_token(parser); // Consume {
+    
+    ASTNode* func_node = create_node(NODE_FUNCTION, func_name.value);
+    func_node->children = (ASTNode**)malloc(10 * sizeof(ASTNode*)); // Arbitrary size
+    func_node->num_children = 0;
+    
+    while (current_token(parser).type != TOKEN_RBRACE) {
+        ASTNode* stmt = parse_statement(parser);
+        if (stmt) {
+            func_node->children[func_node->num_children++] = stmt;
+        }
+        if (current_token(parser).type == TOKEN_SEMICOLON) {
+            advance_token(parser);
+        }
+    }
+    
+    return func_node;
+}
+
+ASTNode* parse_program(Parser* parser) {
+    ASTNode* program = create_node(NODE_PROGRAM, NULL);
+    advance_token(parser); // Consume include
+    program->left = parse_function(parser);
+    return program;
+}
+
+int main() {
+    Parser parser = {tokens, 0, sizeof(tokens)/sizeof(tokens[0])};
+    ASTNode* ast = parse_program(&parser);
+    print_ast(ast, 0);
+    return 0;
+}
