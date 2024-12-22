@@ -7,17 +7,6 @@
 #include "src_lexer/lexer.h"
 #include "hashmap/hashmap.h"
 
-// void iterate_hashmap(HashMap *map) {
-//     for (int i = 0; i < HASHMAP_SIZE; i++) {
-//         HashMapEntry *entry = map->buckets[i];
-
-//         while (entry != NULL) {
-//             printf("File: %s, Data: %d\n", entry->key, entry->value);
-//             entry = entry->next;
-//         }
-//     }
-// }
-
 char *read_file(const char *filename, int *file_size)
 {
     FILE *file = fopen(filename, "rb");
@@ -54,7 +43,6 @@ char *read_file(const char *filename, int *file_size)
 
 Lexer *current_lexer = NULL;
 
-// TODO: refactor code to move lexer, strings and hashmap to separate files
 // TODO: add parser to parse expression
 // TODO: check hashmap freeing memory
 // TODO: add iterator to hashmap
