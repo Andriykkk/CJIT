@@ -5,7 +5,7 @@
 #include <ctype.h>
 #include <stdbool.h>
 #include "../defc/defc.h"
-#include "../string/string.h"
+#include "../misc/string.h"
 
 Lexer *init_lexer(char *source, char *file_name)
 {
@@ -43,6 +43,17 @@ void free_lexer(Lexer *lexer, bool free_tokens)
     free(lexer);
 }
 
+void free_token(Token *token)
+{
+    free(token->value);
+    free(token);
+}
+
+void free_lexer_wrapper(void *value)
+{
+    free_lexer((Lexer *)value, false);
+}
+
 void push_token(Lexer *lexer, Token *token)
 {
     if (lexer->token_count >= lexer->token_capacity - 1)
@@ -69,6 +80,12 @@ Lexer *lex_source(char *source, char *file_name)
         Token *token = get_next_token(lexer);
         push_token(lexer, token);
     }
+
+    char *eof = (char *)malloc(2);
+    eof[0] = 'f';
+    eof[1] = '\0';
+    Token *eof_token = init_token(T_EOF, eof, lexer->line, lexer->column, lexer->position, lexer->position);
+    push_token(lexer, eof_token);
 
     return lexer;
 }
@@ -208,7 +225,7 @@ Token *get_identifier_token(Lexer *lexer)
 
     buffer = realloc(buffer, i * sizeof(char));
 
-    Token *token = init_token(T_IDENTIFIER, buffer, lexer->line, lexer->column, lexer->position - i, lexer->position - 1);
+    Token *token = init_token(T_IDENTIFIER, buffer, lexer->line, lexer->column - i, lexer->position - i, lexer->position - 1);
 
     return token;
 }
@@ -241,7 +258,7 @@ Token *get_number_token(Lexer *lexer)
     buffer = realloc(buffer, (i + 1) * sizeof(char));
     buffer[i] = '\0';
 
-    Token *token = init_token(is_float ? T_FNUMBER : T_DNUMBER, buffer, lexer->line, lexer->column, lexer->position - i, lexer->position);
+    Token *token = init_token(is_float ? T_FNUMBER : T_DNUMBER, buffer, lexer->line, lexer->column - i, lexer->position - i, lexer->position);
 
     return token;
 }
@@ -352,6 +369,6 @@ void print_tokens(Lexer *lexer)
 {
     for (int i = 0; i < lexer->token_count; i++)
     {
-        printf("%s:%d:%d \033[1;35m%s[%d]\033[0m: %s\n", lexer->file_name, lexer->line, lexer->column, token_to_string(lexer->tokens[i].type), lexer->tokens[i].end_position - lexer->tokens[i].position, lexer->tokens[i].value);
+        printf("%s:%d:%d \033[1;35m%s[%d]\033[0m: %s\n", lexer->file_name, lexer->tokens[i].line, lexer->tokens[i].column, token_to_string(lexer->tokens[i].type), lexer->tokens[i].end_position - lexer->tokens[i].position, lexer->tokens[i].value);
     }
 }

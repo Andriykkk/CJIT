@@ -68,10 +68,14 @@ void free_hashmap(HashMap *map, void (*free_entry)(void *))
 
         while (entry != NULL)
         {
-            HashMapEntry *temp = entry;
-            entry = temp->next;
+            HashMapEntry *next = entry->next;
+            if (free_entry != NULL)
+            {
+                free_entry(entry->value);
+            }
             free(entry->key);
-            free_entry(entry->value);
+            free(entry);
+            entry = next;
         }
     }
 

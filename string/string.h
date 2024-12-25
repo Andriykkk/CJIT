@@ -1,1 +1,0 @@
-char *wrap_text_part(const char *line, int start, int end, const char *start_tag, const char *end_tag);

@@ -42,12 +42,12 @@ typedef enum
 
     // Syntax
     T_SEMICOLON,
-    T_LEFT_PAREN,
-    T_RIGHT_PAREN,
-    T_LEFT_BRACE,
-    T_RIGHT_BRACE,
-    T_LEFT_BRACKET,
-    T_RIGHT_BRACKET,
+    T_LPAREN,
+    T_RPAREN,
+    T_LBRACE,
+    T_RBRACE,
+    T_LBRACKET,
+    T_RBRACKET,
     T_COMMA,
     T_DOT,
     T_DOUBLE_QUOTE,
@@ -102,6 +102,7 @@ void print_tokens(Lexer *lexer);
 const char *token_to_string(TokenType type);
 Lexer *init_lexer(char *source, char *file_name);
 void free_lexer(Lexer *lexer, bool free_tokens);
+void free_token(Token *token);
 void push_token(Lexer *lexer, Token *token);
 char peek_next_char(Lexer *lexer);
 void advance_lexer(Lexer *lexer);
@@ -113,3 +114,4 @@ Token *get_number_token(Lexer *lexer);
 void append_token_value(Token *token, char *value);
 char *lexer_get_line(Lexer *lexer);
 void skip_whitespace(Lexer *lexer);
+void free_lexer_wrapper(void *value);
