@@ -45,7 +45,7 @@ typedef struct
     {
         struct
         {
-            uintptr_t value;
+            char *value;
             LiteralType literal_type;
         } literal;
 
@@ -276,11 +276,12 @@ ASTNode cast_literal_node(LiteralType type, void *value)
     ASTNode node;
     node.type = N_LITERAL;
     node.data.literal.literal_type = type;
-    node.data.literal.value = (uintptr_t)value;
+    node.data.literal.value = value;
 
     return node;
 }
 
+int primary(Parser *parser);
 int parse_expression(Parser *parser, int precedence);
 
 int parse_unary_expression(Parser *parser)
@@ -296,11 +297,6 @@ int parse_unary_expression(Parser *parser)
     return primary(parser);
 }
 
-bool is_operator_token(TokenType type)
-{
-    return (type == T_PLUS || type == T_MINUS || type == T_MULTIPLY || type == T_DIVIDE);
-}
-
 int primary(Parser *parser)
 {
     Token token = get_parser_token(parser);
@@ -309,10 +305,10 @@ int primary(Parser *parser)
     switch (token.type)
     {
     case T_DNUMBER:
-        node = add_ast_node(parser, cast_literal_node(LITERAL_INT, *(int *)convert_string_to_number(token.value, token.type)));
+        node = add_ast_node(parser, cast_literal_node(LITERAL_INT, token.value));
         break;
     case T_FNUMBER:
-        node = add_ast_node(parser, cast_literal_node(LITERAL_FLOAT, *(int *)convert_string_to_number(token.value, token.type)));
+        node = add_ast_node(parser, cast_literal_node(LITERAL_FLOAT, token.value));
         break;
     case T_LPAREN:
         consume_parser_token(parser, T_LPAREN);
@@ -357,16 +353,21 @@ int parse_expression(Parser *parser, int precedence)
     return left;
 }
 
+void print_ast_indent(int indent_level)
+{
+    for (int i = 0; i < indent_level; i++)
+    {
+        printf("\t");
+    }
+}
+
 void print_ast_node(Parser *parser, int node_index, int indent_level)
 {
     if (node_index >= parser->ast_count)
         return;
 
     ASTNode node = parser->ast_nodes[node_index];
-    for (int i = 0; i < indent_level; i++)
-    {
-        printf("\t");
-    }
+    print_ast_indent(indent_level);
 
     switch (node.type)
     {
@@ -374,9 +375,9 @@ void print_ast_node(Parser *parser, int node_index, int indent_level)
     {
         printf("Literal: ");
         if (node.data.literal.literal_type == LITERAL_FLOAT)
-            printf("Float: %f\n", *((float *)&node.data.literal.value));
+            printf("Float: %s\n", node.data.literal.value);
         else if (node.data.literal.literal_type == LITERAL_INT)
-            printf("Int: %d\n", *((int *)&node.data.literal.value));
+            printf("Int: %s\n", node.data.literal.value);
         else
             printf("Unknown Literal Type\n");
     }
@@ -419,9 +420,11 @@ void print_ast_node(Parser *parser, int node_index, int indent_level)
         default:
             printf("Unknown Binary Operator\n");
         }
+        print_ast_indent(indent_level);
         printf("Left operand:\n");
         print_ast_node(parser, node.data.binary.left, indent_level + 1);
 
+        print_ast_indent(indent_level);
         printf("Right operand:\n");
         print_ast_node(parser, node.data.binary.right, indent_level + 1);
     }
@@ -452,7 +455,7 @@ int main(int argc, char *argv[])
     hashmap_insert(lexers_hashmap, strdup(argv[1]), lexer);
     current_lexer = hashmap_find(lexers_hashmap, argv[1]);
 
-    print_tokens(current_lexer);
+    // print_tokens(current_lexer);
 
     Parser *parser = init_parser(current_lexer);
     current_parser = parser;
