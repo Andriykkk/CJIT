@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <wchar.h>
 #include <stdbool.h>
 #include "../defc/defc.h"
 #include "../misc/string.h"
@@ -62,7 +63,7 @@ void push_token(Lexer *lexer, Token *token)
         lexer->tokens = realloc(lexer->tokens, lexer->token_capacity * sizeof(Token));
         if (lexer->tokens == NULL)
         {
-            printf("Error reallocating memory\n");
+            wprintf(L"Error reallocating memory\n");
             exit(1);
         }
     }
@@ -100,6 +101,60 @@ char peek_next_char(Lexer *lexer)
     return '\0';
 }
 
+int get_utf8_char_len(unsigned char first_byte)
+{
+    if ((first_byte & 0x80) == 0)
+    {
+        return 1;
+    }
+    else if ((first_byte & 0xE0) == 0xC0)
+    {
+        return 2;
+    }
+    else if ((first_byte & 0xF0) == 0xE0)
+    {
+        return 3;
+    }
+    else if ((first_byte & 0xF8) == 0xF0)
+    {
+        return 4;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+// void advance_lexer(Lexer *lexer)
+// {
+//     if (lexer->current_char != '\0')
+//     {
+//         unsigned char current_byte = lexer->current_char;
+//         if (current_byte >= 0x80)
+//         {
+//             int char_len = get_utf8_char_len(current_byte);
+
+//             if (lexer->position + char_len > lexer->length)
+//             {
+//                 lexer->is_eof = true;
+//             }
+//             lexer->position += char_len;
+//             lexer->column += char_len;
+//             lexer->current_char = lexer->source[lexer->position];
+//         }
+//         else
+//         {
+//             lexer->position++;
+//             lexer->column++;
+//             lexer->current_char = lexer->source[lexer->position];
+//         }
+//     }
+//     else
+//     {
+//         lexer->is_eof = true;
+//     }
+// }
+
 void advance_lexer(Lexer *lexer)
 {
     lexer->position++;
@@ -128,6 +183,19 @@ Token *init_token(TokenType type, char *value, int line, int column, int positio
     return token;
 }
 
+int isalpha_cyrillic(int ch)
+{
+    if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'))
+    {
+        return 1;
+    }
+    if ((ch >= 0x0410 && ch <= 0x042F) || (ch >= 0x0430 && ch <= 0x044F) || ch == 0x0404 || ch == 0x0454 || ch == 0x0406 || ch == 0x0456 || ch == 0x0407 || ch == 0x0457)
+    {
+        return 1;
+    }
+    return 0;
+}
+
 Token *get_next_token(Lexer *lexer)
 {
     while (lexer->is_eof == false)
@@ -139,7 +207,7 @@ Token *get_next_token(Lexer *lexer)
             return get_number_token(lexer);
         }
 
-        if (isalpha(lexer->current_char) || lexer->current_char == '_')
+        if (isalpha_cyrillic(lexer->current_char) || lexer->current_char == '_')
         {
             return get_identifier_token(lexer);
         }
@@ -199,8 +267,10 @@ Token *get_next_token(Lexer *lexer)
         default:
             char *line = lexer_get_line(lexer);
             char *wrapped_line = wrap_text_part(line, lexer->column - 1, lexer->column + strlen(token->value) - 2, "\033[1;4;31m", "\033[0m");
-            printf("%s:%d:%d ERROR: unknown token: \033[1;35m`%c`\033[0m\n\033[1m%d\033[0m | %s\n",
-                   lexer->file_name, lexer->line, lexer->column, lexer->current_char, lexer->line, wrapped_line);
+            // TODO: remake this code for cyrilic
+            wprintf(L"%s:%d:%d ERROR: unknown token: %c\n", lexer->file_name, lexer->line, lexer->column, lexer->current_char);
+            // printf("%s:%d:%d ERROR: unknown token: \033[1;35m`%c`\033[0m\n\033[1m%d\033[0m | %s\n",
+            //        lexer->file_name, lexer->line, lexer->column, lexer->current_char, lexer->line, wrapped_line);
             free(line);
             free(token->value);
             free(token);
@@ -223,7 +293,7 @@ Token *get_identifier_token(Lexer *lexer)
     char *buffer = malloc(256 * sizeof(char));
     int i = 0;
 
-    while (lexer->current_char != '\0' && (isalnum(lexer->current_char) || lexer->current_char == '_'))
+    while (lexer->current_char != '\0' && (isalnum(lexer->current_char) || lexer->current_char == '_' || isalpha_cyrillic(lexer->current_char)))
     {
         buffer[i++] = lexer->current_char;
         advance_lexer(lexer);
@@ -380,6 +450,6 @@ void print_tokens(Lexer *lexer)
 {
     for (int i = 0; i < lexer->token_count; i++)
     {
-        printf("%s:%d:%d \033[1;35m%s[%d]\033[0m: %s\n", lexer->file_name, lexer->tokens[i].line, lexer->tokens[i].column, token_to_string(lexer->tokens[i].type), lexer->tokens[i].end_position - lexer->tokens[i].position, lexer->tokens[i].value);
+        wprintf(L"%s:%d:%d \033[1;35m%s[%d]\033[0m: %s\n", lexer->file_name, lexer->tokens[i].line, lexer->tokens[i].column, token_to_string(lexer->tokens[i].type), lexer->tokens[i].end_position - lexer->tokens[i].position, lexer->tokens[i].value);
     }
 }

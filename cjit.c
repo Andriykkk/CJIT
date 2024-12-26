@@ -7,9 +7,16 @@
 #include "src_lexer/lexer.h"
 #include "hashmap/hashmap.h"
 #include "misc/file.h"
+#include <wchar.h>
+#include <sys/resource.h>
 #include <stdint.h>
+#include <locale.h>
 
-// TODO: add cyrylic support for lexer
+// TODO: think how to create globals and local variables
+// TODO: continue adding cyrylic support for lexer(remaka advance, error, checking for character in is alpha)
+// TODO: remove error when it fault if last character is space
+// TODO: refactor parser into different files
+// TODO: add globals to parser
 // TODO: add proper function to generate errors with mismatching tokens
 // TODO: not free ast when it dont need to
 // TODO: one day remake parser so it will be more efficient
@@ -451,16 +458,13 @@ int main(int argc, char *argv[])
 {
     if (argc < 2)
     {
-        printf("Usage: %s <file>\n", argv[0]);
+        wprintf(L"Usage: %s <file>\n", argv[0]);
         return 1;
     }
+    setlocale(LC_CTYPE, "en_US.UTF-8");
 
     int file_size;
     char *source = read_file(argv[1], &file_size);
-    if (source == NULL)
-    {
-        printf("Failed to read file: %s\n", argv[1]);
-    }
 
     HashMap *lexers_hashmap = init_hashmap();
     Lexer *lexer = lex_source(source, strdup(argv[1]));

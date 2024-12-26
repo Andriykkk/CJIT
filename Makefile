@@ -7,6 +7,9 @@ TARGET = tests/test1.cj
 all: $(EXEC)
 	./$(EXEC) $(TARGET)
 
+time: $(EXEC)
+	time ./$(EXEC) $(TARGET)
+
 $(EXEC): $(SOURCE)
 	$(CC) $(CFLAGS) -o $(EXEC) $(SOURCE)
 

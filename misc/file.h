@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <wchar.h>
 
 char *read_file(const char *filename, int *file_size)
 {
@@ -7,7 +8,7 @@ char *read_file(const char *filename, int *file_size)
 
     if (file == NULL)
     {
-        printf("Error opening file: %s\n", filename);
+        wprintf(L"Error opening file: %s\n", filename);
         return NULL;
     }
 
@@ -18,7 +19,7 @@ char *read_file(const char *filename, int *file_size)
     char *source = (char *)malloc(*file_size + 1);
     if (source == NULL)
     {
-        printf("Error allocating memory\n");
+        wprintf(L"Error allocating memory\n");
         fclose(file);
         return NULL;
     }

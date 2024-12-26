@@ -115,3 +115,5 @@ void append_token_value(Token *token, char *value);
 char *lexer_get_line(Lexer *lexer);
 void skip_whitespace(Lexer *lexer);
 void free_lexer_wrapper(void *value);
+
+int isalpha_cyrillic(int ch);
