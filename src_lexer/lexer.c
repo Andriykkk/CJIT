@@ -154,6 +154,12 @@ Token *get_next_token(Lexer *lexer)
         case '/':
             token->type = T_DIVIDE;
             break;
+        case '(':
+            token->type = T_LPAREN;
+            break;
+        case ')':
+            token->type = T_RPAREN;
+            break;
         case '+':
             if (peek_next_char(lexer) == '+')
             {
@@ -223,7 +229,8 @@ Token *get_identifier_token(Lexer *lexer)
         advance_lexer(lexer);
     }
 
-    buffer = realloc(buffer, i * sizeof(char));
+    buffer = realloc(buffer, (i + 1) * sizeof(char));
+    buffer[i] = '\0';
 
     Token *token = init_token(T_IDENTIFIER, buffer, lexer->line, lexer->column - i, lexer->position - i, lexer->position - 1);
 
@@ -338,6 +345,10 @@ const char *token_to_string(TokenType type)
         return "Plus Operator";
     case T_MINUS:
         return "Minus Operator";
+    case T_LPAREN:
+        return "Left Parenthesis";
+    case T_RPAREN:
+        return "Right Parenthesis";
     case T_INCREMENT:
         return "Increment Operator";
     case T_DECREMENT:

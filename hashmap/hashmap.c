@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "hashmap.h"
+#include "../defc/defc.h"
 
 unsigned long hash_string(const char *key)
 {
@@ -44,7 +45,7 @@ void hashmap_insert(HashMap *hashmap, char *key, void *value)
     hashmap->buckets[index] = entry;
 }
 
-void *hashmap_find(HashMap *map, const char *key)
+void *hashmap_get(HashMap *map, const char *key)
 {
     unsigned long index = get_hash_index(key);
     HashMapEntry *entry = map->buckets[index];

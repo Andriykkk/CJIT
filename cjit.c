@@ -9,9 +9,6 @@
 #include "misc/file.h"
 #include <stdint.h>
 
-// TODO: add parser to parse expression
-// TODO: add iterator to hashmap
-// TODO: refactor imports
 // TODO: add cyrylic support for lexer
 // TODO: add proper function to generate errors with mismatching tokens
 // TODO: not free ast when it dont need to
@@ -248,6 +245,21 @@ int peek_parser_token_type(Parser *parser, TokenType expected_type, int offset)
     return peek_parser_token(parser, offset).type == expected_type;
 }
 
+int match_parser_token_type(Parser *parser, TokenType expected_type, int offset)
+{
+    Token token = peek_parser_token(parser, offset);
+    if (token.type == expected_type)
+    {
+        return 1;
+    }
+    else
+    {
+        parser->error_found = true;
+        // TODO: add error
+    }
+    return 0;
+}
+
 int cast_binary_node(TokenType type, int left, int right)
 {
     ASTNode node;
@@ -313,7 +325,7 @@ int primary(Parser *parser)
     case T_LPAREN:
         consume_parser_token(parser, T_LPAREN);
         node = parse_expression(parser, 0);
-        consume_parser_token(parser, T_RPAREN);
+        match_parser_token_type(parser, T_RPAREN, 0);
         break;
 
     default:
@@ -453,7 +465,7 @@ int main(int argc, char *argv[])
     HashMap *lexers_hashmap = init_hashmap();
     Lexer *lexer = lex_source(source, strdup(argv[1]));
     hashmap_insert(lexers_hashmap, strdup(argv[1]), lexer);
-    current_lexer = hashmap_find(lexers_hashmap, argv[1]);
+    current_lexer = hashmap_get(lexers_hashmap, argv[1]);
 
     // print_tokens(current_lexer);
 
@@ -461,6 +473,11 @@ int main(int argc, char *argv[])
     current_parser = parser;
     int head = parse_expression(parser, 0);
     print_ast_node(parser, head, 0);
+
+    // for (int i = 0; i < parser->ast_count; i++)
+    // {
+    //     printf("AST node %d:\n", i);
+    // }
 
     free_parser(parser, true);
     free_hashmap(lexers_hashmap, free_lexer_wrapper);
