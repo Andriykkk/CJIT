@@ -15,6 +15,7 @@
 
 // TODO: add declaration parser, and create right now only symbol table in parser
 // TODO: check why parse_expression go futher than end of file and try several times to take precedence of end of the file, also add error if it cant get precedence
+// TODO: everytime when there is error in token like expected one but get another, it should enter panic mode and go to next statement after ";" or ")", "}"
 // TODO: check for amount of brackets in expression, right now this work fine "(1 + 2) * (3.43 / 54"
 // TODO: continue adding cyrylic support for lexer(remaka advance, error, checking for character in is alpha)
 // TODO: remove error when it fault if last character is space
@@ -70,7 +71,7 @@ parser_literal parse_var_type()
     default:
         current_parser->error_found = true;
         // TODO: add proper error handling
-        wprintf(L"Unknown token type: %d\n", token_to_string(token.type));
+        wprintf(L"Unknown token type in parse_var_type: %s\n", token_to_string(token.type));
     }
 
     advance_parser(current_parser);
@@ -79,12 +80,12 @@ parser_literal parse_var_type()
 
 int parse_assignment_expression()
 {
-    if (peek_parser_token_type(current_parser, T_IDENTIFIER, 0) && peek_parser_token_type(current_parser, T_EQUAL, 1))
+    if (peek_parser_token_type(current_parser, T_IDENTIFIER, 0) && peek_parser_token_type(current_parser, T_ASSIGN, 1))
     {
         char *name = get_parser_token(current_parser).value;
         advance_parser(current_parser);
 
-        consume_parser_token(current_parser, T_EQUAL);
+        consume_parser_token(current_parser, T_ASSIGN);
 
         int expression = parse_assignment_expression();
         return add_ast_node(current_parser, cast_assignment_node(name, expression));
@@ -118,7 +119,7 @@ int parse_declaration(Parser *parser)
         var_type.value = token.value;
 
         add_variable_declaration(var_type);
-        consume_parser_token(current_parser, T_EQUAL);
+        consume_parser_token(current_parser, T_ASSIGN);
 
         int value = parse_assignment_expression();
 
@@ -157,8 +158,8 @@ int main(int argc, char *argv[])
 
     Parser *parser = init_parser(current_lexer);
     current_parser = parser;
-    int head = parse_expression(parser, 0);
-    // int head = parse_declaration(parser);
+    // int head = parse_expression(parser, 0);
+    int head = parse_declaration(parser);
     print_ast_node(parser, head, 0);
     // for (int i = 0; i < parser->ast_count; i++)
     // {

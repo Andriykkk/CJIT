@@ -228,6 +228,21 @@ Token *get_next_token(Lexer *lexer)
         case ')':
             token->type = T_RPAREN;
             break;
+        case ';':
+            token->type = T_SEMICOLON;
+            break;
+        case '=':
+            if (peek_next_char(lexer) == '=')
+            {
+                advance_lexer(lexer);
+                token->type = T_EQUAL;
+                append_token_value(token, "=");
+            }
+            else
+            {
+                token->type = T_ASSIGN;
+            }
+            break;
         case '+':
             if (peek_next_char(lexer) == '+')
             {
@@ -288,6 +303,35 @@ Token *get_next_token(Lexer *lexer)
     return token;
 }
 
+TokenType get_token_keyword(char *value)
+{
+    if (strcmp(value, "int") == 0)
+    {
+        return T_INT;
+    }
+    if (strcmp(value, "float") == 0)
+    {
+        return T_FLOAT;
+    }
+    else if (strcmp(value, "else") == 0)
+    {
+        return T_ELSE;
+    }
+    else if (strcmp(value, "while") == 0)
+    {
+        return T_WHILE;
+    }
+    else if (strcmp(value, "for") == 0)
+    {
+        return T_FOR;
+    }
+    else if (strcmp(value, "return") == 0)
+    {
+        return T_RETURN;
+    }
+    return T_IDENTIFIER;
+}
+
 Token *get_identifier_token(Lexer *lexer)
 {
     char *buffer = malloc(256 * sizeof(char));
@@ -302,7 +346,8 @@ Token *get_identifier_token(Lexer *lexer)
     buffer = realloc(buffer, (i + 1) * sizeof(char));
     buffer[i] = '\0';
 
-    Token *token = init_token(T_IDENTIFIER, buffer, lexer->line, lexer->column - i, lexer->position - i, lexer->position - 1);
+    TokenType type = get_token_keyword(buffer);
+    Token *token = init_token(type, buffer, lexer->line, lexer->column - i, lexer->position - i, lexer->position - 1);
 
     return token;
 }
@@ -429,7 +474,7 @@ const char *token_to_string(TokenType type)
         return "Power Operator";
     case T_DIVIDE:
         return "Divide Operator";
-    case T_ASIGN:
+    case T_ASSIGN:
         return "Assignment Operator";
     case T_EQUAL:
         return "Equal Operator";
@@ -441,6 +486,8 @@ const char *token_to_string(TokenType type)
         return "Greater or Equal Operator";
     case T_LESS:
         return "Less Operator";
+    case T_SEMICOLON:
+        return "Semicolon";
     default:
         return "Unknown Token Type in token_to_string()";
     }

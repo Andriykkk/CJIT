@@ -35,7 +35,8 @@ int primary(Parser *parser)
     default:
         parser->error_found = true;
         // TODO: add error
-        printf("Unknown token type: %d\n", token.type);
+        wprintf(L"Unknown token type in primary: %s\n", token_to_string(token.type));
+        exit(1);
         break;
     }
 
@@ -69,7 +70,9 @@ int match_parser_token_type(Parser *parser, TokenType expected_type, int offset)
     {
         wprintf(L"Expected %s but got %s\n", token_to_string(expected_type), token_to_string(token.type));
         parser->error_found = true;
+
         // TODO: add error
+        exit(1);
     }
     return 0;
 }
@@ -83,13 +86,12 @@ int parse_expression(Parser *parser, int precedence)
         Token token = get_parser_token(parser);
         int token_precedence = get_token_precedence(token.type);
 
-        if (token_precedence <= precedence)
+        if (token_precedence <= precedence || current_parser->is_eol)
         {
             break;
         }
 
         consume_parser_token(parser, token.type);
-
         int right = parse_expression(parser, token_precedence);
 
         int node = add_ast_node(parser, cast_binary_node(token.type, left, right));
@@ -106,7 +108,7 @@ Parser *init_parser(Lexer *lexer)
     parser->lexer = lexer;
     parser->tokens = lexer->tokens;
     parser->file_name = lexer->file_name;
-    parser->token_count = lexer->token_count;
+    parser->token_count = lexer->token_count - 1;
     parser->current_token_index = 0;
     parser->is_eol = false;
     parser->error_found = false;
@@ -173,7 +175,7 @@ void resize_ast_array(Parser *parser)
 
 int advance_parser(Parser *parser)
 {
-    if (parser->current_token_index < parser->token_count)
+    if (parser->current_token_index < parser->token_count - 1)
     {
         parser->current_token_index++;
         return 0;
@@ -194,6 +196,7 @@ Token consume_parser_token(Parser *parser, TokenType expected_type)
     {
         // TODO: make proper error handling
         wprintf(L"Expected %s but got %s\n", token_to_string(expected_type), token_to_string(current_token.type));
+        exit(1);
         // char *line = lexer_get_line(parser->lexer);
         // char *wrapped_line = wrap_text_part(line, current_token.column - 1, current_token.column + strlen(current_token.value) - 2, "\033[1;4;31m", "\033[0m");
         // printf("%s:%d:%d ERROR: unknown token: \033[1;35m`%c`\033[0m\n\033[1m%d\033[0m | %s\n",
@@ -217,7 +220,7 @@ int get_token_precedence(TokenType type)
     case T_DIVIDE:
         return 2;
     default:
-        wprintf(L"Unknown token type in get_token_precedence: %d\n", type);
+        wprintf(L"Unknown token type in get_token_precedence: %s\n", token_to_string(type));
         return 0;
     }
 }

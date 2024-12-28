@@ -29,7 +29,7 @@ typedef enum
     T_MULTIPLY,
     T_POWER,
     T_DIVIDE,
-    T_ASIGN,
+    T_ASSIGN,
     T_EQUAL,
     T_NOT_EQUAL,
     T_GREATER,
