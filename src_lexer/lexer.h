@@ -1,5 +1,8 @@
 #include <stdbool.h>
 
+#ifndef LEXER_H
+#define LEXER_H
+
 typedef enum
 {
     T_EOF = 0,
@@ -117,3 +120,5 @@ void skip_whitespace(Lexer *lexer);
 void free_lexer_wrapper(void *value);
 
 int isalpha_cyrillic(int ch);
+
+#endif

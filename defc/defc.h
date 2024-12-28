@@ -1,15 +1,19 @@
-#ifndef MAX_ERRORS
+#ifndef DEFC_H
+#define DEFC_H
+
+#include "../src_lexer/lexer.h"
+#include "../parser/parser.h"
+#include <stddef.h>
+
+extern Lexer *current_lexer;
+extern Parser *current_parser;
+
 #define MAX_ERRORS 255
-#endif
 
-#ifndef TOKEN_INCREMENT
 #define TOKEN_INCREMENT 1024
-#endif
 
-#ifndef PARSER_INCREMENT
 #define PARSER_INCREMENT 1024
-#endif
 
-#ifndef HASHMAP_SIZE
-#define HASHMAP_SIZE 10240
+#define HASHMAP_SIZE 1024
+
 #endif
