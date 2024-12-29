@@ -10,24 +10,25 @@ I am trying to create a language similar to C but with the added Just-In-Time (J
 - [ ] JIT Execution
 
 ## Example
-Currently, Cjit supports parsing simple arithmetic expressions like the following(without brackets):
+Currently, Cjit supports only simple declarations like the following(without brackets):
 ```bash
-1 + 2 * 3.43 / 54
+int x = 1 + 2 * 3.43 / 54;
 ```
 
 ### Example of Generated AST:
 ```bash
-Binary: +
-Left operand:
-        Literal: Int: 1
-Right operand:
-        Binary: /
+Variable Declaration: Var: x
+        Binary: +
         Left operand:
-                Binary: *
-                Left operand:
-                        Literal: Int: 2
-                Right operand:
-                        Literal: Float: 3.43
+                Literal: Int: 1
         Right operand:
-                Literal: Int: 54
+                Binary: /
+                Left operand:
+                        Binary: *
+                        Left operand:
+                                Literal: Int: 2
+                        Right operand:
+                                Literal: Float: 3.43
+                Right operand:
+                        Literal: Int: 54
 ```
