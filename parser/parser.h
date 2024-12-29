@@ -125,8 +125,6 @@ Token consume_parser_token(Parser *parser, TokenType expected_type);
 int match_parser_token_type(Parser *parser, TokenType expected_type, int offset);
 Token peek_parser_token(Parser *parser, int offset);
 int peek_parser_token_type(Parser *parser, TokenType expected_type, int offset);
-void free_parser_declaration(parser_declaration *declaration);
-void free_parser_declaration_wrapper(void *value);
 void resize_ast_array(Parser *parser);
 
 // casting
@@ -138,5 +136,6 @@ ASTNode cast_assignment_node(char *name, int expression);
 // utils
 void print_ast_indent(int indent_level);
 void print_ast_node(Parser *parser, int node_index, int indent_level);
+char *node_type_to_string(NodeType type);
 
 #endif

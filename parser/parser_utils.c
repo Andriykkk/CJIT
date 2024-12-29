@@ -22,6 +22,20 @@ void print_ast_node(Parser *parser, int node_index, int indent_level)
 
     switch (node.type)
     {
+    case N_VARIABLE_DECLARATION:
+    {
+        wprintf(L"Variable Declaration: ");
+        wprintf(L"Var: %s\n", node.data.variable_declaration.name);
+        print_ast_node(parser, node.data.variable_declaration.expression, indent_level + 1);
+    }
+    break;
+    case N_ASSIGNMENT:
+    {
+        wprintf(L"Assignment: ");
+        wprintf(L"Var: %s\n", node.data.assignment.name);
+        print_ast_node(parser, node.data.assignment.expression, indent_level + 1);
+    }
+    break;
     case N_LITERAL:
     {
         wprintf(L"Literal: ");
@@ -82,6 +96,25 @@ void print_ast_node(Parser *parser, int node_index, int indent_level)
     break;
 
     default:
-        wprintf(L"Unknown node type\n");
+        wprintf(L"Unknown node type in print_ast_node: %s\n", node_type_to_string(node.type));
+    }
+}
+
+char *node_type_to_string(NodeType type)
+{
+    switch (type)
+    {
+    case N_VARIABLE_DECLARATION:
+        return "Variable Declaration";
+    case N_ASSIGNMENT:
+        return "Assignment";
+    case N_LITERAL:
+        return "Literal";
+    case N_UNARY_EXPRESSION:
+        return "Unary";
+    case N_BINARY_EXPRESSION:
+        return "Binary";
+    default:
+        return "Unknown Node Type in node_type_to_string";
     }
 }

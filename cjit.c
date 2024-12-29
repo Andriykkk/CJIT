@@ -13,8 +13,7 @@
 #include <stdint.h>
 #include <locale.h>
 
-// TODO: add declaration parser, and create right now only symbol table in parser
-// TODO: check why parse_expression go futher than end of file and try several times to take precedence of end of the file, also add error if it cant get precedence
+// TODO: check error when expression parser put parenthesis to get_token_precedence, so actually just add parenthesis support to parser
 // TODO: everytime when there is error in token like expected one but get another, it should enter panic mode and go to next statement after ";" or ")", "}"
 // TODO: check for amount of brackets in expression, right now this work fine "(1 + 2) * (3.43 / 54"
 // TODO: continue adding cyrylic support for lexer(remaka advance, error, checking for character in is alpha)
@@ -101,11 +100,16 @@ ASTNode cast_declaration_node(char *name, parser_literal var_type, int expressio
     node.data.variable_declaration.name = name;
     node.data.variable_declaration.literal = var_type;
     node.data.variable_declaration.expression = expression;
+    return node;
 }
 
 void add_variable_declaration(parser_literal var_type)
 {
-    hashmap_insert(current_parser->declarations, var_type.value, &var_type);
+    parser_declaration *declaration = malloc(sizeof(parser_declaration));
+    declaration->type = VARIABLE_DECLARATION;
+    declaration->literal = var_type;
+
+    hashmap_insert(current_parser->declarations, var_type.value, declaration);
 }
 
 int parse_declaration(Parser *parser)
@@ -154,16 +158,18 @@ int main(int argc, char *argv[])
     hashmap_insert(lexers_hashmap, strdup(argv[1]), lexer);
     current_lexer = hashmap_get(lexers_hashmap, argv[1]);
 
-    print_tokens(current_lexer);
+    // print_tokens(current_lexer);
 
     Parser *parser = init_parser(current_lexer);
     current_parser = parser;
+
     // int head = parse_expression(parser, 0);
     int head = parse_declaration(parser);
     print_ast_node(parser, head, 0);
+
     // for (int i = 0; i < parser->ast_count; i++)
     // {
-    //     printf("AST node %d:\n", i);
+    //     wprintf(L"AST node %d type: %d\n", i, parser->ast_nodes[i].type);
     // }
 
     free_parser(parser, true);

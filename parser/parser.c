@@ -35,7 +35,7 @@ int primary(Parser *parser)
     default:
         parser->error_found = true;
         // TODO: add error
-        wprintf(L"Unknown token type in primary: %s\n", token_to_string(token.type));
+        wprintf(L"Error parsing expression: %s\n", token_to_string(token.type));
         exit(1);
         break;
     }
@@ -84,6 +84,10 @@ int parse_expression(Parser *parser, int precedence)
     while (true)
     {
         Token token = get_parser_token(parser);
+
+        if (token.type == T_EOF || token.type == T_SEMICOLON)
+            break;
+
         int token_precedence = get_token_precedence(token.type);
 
         if (token_precedence <= precedence || current_parser->is_eol)
@@ -91,7 +95,7 @@ int parse_expression(Parser *parser, int precedence)
             break;
         }
 
-        consume_parser_token(parser, token.type);
+        advance_parser(current_parser);
         int right = parse_expression(parser, token_precedence);
 
         int node = add_ast_node(parser, cast_binary_node(token.type, left, right));
@@ -102,13 +106,25 @@ int parse_expression(Parser *parser, int precedence)
     return left;
 }
 
+int parse_unary_expression(Parser *parser)
+{
+    Token token = get_parser_token(parser);
+    if (peek_parser_token_type(parser, T_PLUS, 0) || peek_parser_token_type(parser, T_MINUS, 0))
+    {
+        int operand = primary(parser);
+        return operand;
+    }
+
+    return primary(parser);
+}
+
 Parser *init_parser(Lexer *lexer)
 {
     Parser *parser = (Parser *)malloc(sizeof(Parser));
     parser->lexer = lexer;
     parser->tokens = lexer->tokens;
     parser->file_name = lexer->file_name;
-    parser->token_count = lexer->token_count - 1;
+    parser->token_count = lexer->token_count;
     parser->current_token_index = 0;
     parser->is_eol = false;
     parser->error_found = false;
@@ -141,24 +157,9 @@ void free_parser(Parser *parser, bool free_tokens)
         free(parser->tokens);
     }
     free_hashmap(parser->symbol_table, free);
-    free_hashmap(parser->declarations, free_parser_declaration_wrapper);
+    free_hashmap(parser->declarations, free);
     free(parser->ast_nodes);
     free(parser);
-}
-
-void free_parser_declaration(parser_declaration *declaration)
-{
-    if (declaration->type == VARIABLE_DECLARATION)
-    {
-        free(declaration->literal.value);
-    }
-
-    free(declaration);
-}
-
-void free_parser_declaration_wrapper(void *value)
-{
-    free_parser_declaration((parser_declaration *)value);
 }
 
 void resize_ast_array(Parser *parser)
@@ -221,6 +222,7 @@ int get_token_precedence(TokenType type)
         return 2;
     default:
         wprintf(L"Unknown token type in get_token_precedence: %s\n", token_to_string(type));
+        exit(1);
         return 0;
     }
 }
@@ -237,17 +239,4 @@ int add_ast_node(Parser *parser, ASTNode node)
     parser->ast_count++;
 
     return index;
-}
-
-int parse_unary_expression(Parser *parser)
-{
-    Token token = get_parser_token(parser);
-    if (peek_parser_token_type(parser, T_PLUS, 0) || peek_parser_token_type(parser, T_MINUS, 0))
-    {
-        advance_parser(parser);
-        int operand = primary(parser);
-        return operand;
-    }
-
-    return primary(parser);
 }
