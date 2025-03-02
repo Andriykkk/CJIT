@@ -13,13 +13,20 @@
 #include <stdint.h>
 #include <locale.h>
 
+// TODO: add support for several statements, they should be separated by ";"
+// TODO: add blocks and function declaration support
 // TODO: check error when expression parser put parenthesis to get_token_precedence, so actually just add parenthesis support to parser
+
 // TODO: everytime when there is error in token like expected one but get another, it should enter panic mode and go to next statement after ";" or ")", "}"
 // TODO: check for amount of brackets in expression, right now this work fine "(1 + 2) * (3.43 / 54"
+// TODO: after function declaration add support for function call
+// TODO: after functions and variables start making Syntax checker, that will just check types and if it declared
+// TODO: add more complex types like long, unsigned
 // TODO: continue adding cyrylic support for lexer(remaka advance, error, checking for character in is alpha)
 // TODO: remove error when it fault if last character is space
 // TODO: refactor parser into different files
 // TODO: add globals to parser
+// TODO: add proper error handling
 // TODO: add proper function to generate errors with mismatching tokens
 // TODO: not free ast when it dont need to
 // TODO: one day remake parser so it will be more efficient
